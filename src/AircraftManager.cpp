@@ -1,22 +1,13 @@
 #include "AircraftManager.h"
 
-constexpr int SCREEN_SIZE = 240;
-constexpr int SCREEN_SIZE_DIV_2 = (SCREEN_SIZE / 2);
-
 #include <ArduinoJson.h>
 
 void AircraftManager::Initialise()
 {
-    // get centre point + radius
-    lat = configServer.GetStoredString("latitude").toDouble();
-    lon = configServer.GetStoredString("longitude").toDouble();
-    rad = configServer.GetStoredString("radius").toDouble();
-
-    // configuration
-    const String renderText = configServer.GetStoredString("infotext");
-    const String renderTris = configServer.GetStoredString("triangle");
-    if (!renderText.isEmpty()) displayInfoText = renderText == "true" ? true : false;
-    if (!renderTris.isEmpty()) displayTriangles = renderTris == "true" ? true : false;
+    Serial.printf(
+        "[aircraft] Radar center: %.4f, %.4f; radius: %.1f degrees\n",
+        lat, lon, rad
+    );
 
     // calculate how often we can call OpenSky API before being rate limited
     constexpr int MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -25,11 +16,14 @@ void AircraftManager::Initialise()
     constexpr int TOKEN_BUFFER = 3;
     int dailyRequestBudget = ANONYMOUS_TOKENS_PER_DAY - TOKEN_BUFFER; // non-authed tokens minus buffer
 
-    const String token = authHandler.GetValidToken(configServer.GetStoredString("opensky-id"), configServer.GetStoredString("opensky-secret"));
+    Serial.println("[aircraft] Checking OpenSky credentials/token");
+    const String token = authHandler.GetValidToken(OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET);
+    Serial.println("[aircraft] OpenSky credentials/token check finished");
     if (!token.isEmpty())
         dailyRequestBudget = AUTHED_TOKENS_PER_DAY - TOKEN_BUFFER; // authed tokens minus buffer
 
     fetchInterval = MS_PER_DAY / dailyRequestBudget;
+    lastFetch = millis();
 }
 
 void AircraftManager::Update()
@@ -41,10 +35,7 @@ void AircraftManager::Update()
         lastFetch = now;
 
         // auth
-        const String token = authHandler.GetValidToken(
-            configServer.GetStoredString("opensky-id"),
-            configServer.GetStoredString("opensky-secret")
-        );
+        const String token = authHandler.GetValidToken(OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET);
 
         std::vector<std::pair<String, String>> headers = {};
         if (!token.isEmpty()) headers.push_back({ "Authorization", "Bearer " + token });
@@ -116,8 +107,8 @@ void AircraftManager::Draw(LGFX_Sprite& backbuffer)
 
 void AircraftManager::DrawRadarCircles(LGFX_Sprite& backbuffer) const
 {
-    constexpr int CENTRE = SCREEN_SIZE_DIV_2 - 1;
-    constexpr int OUTER = SCREEN_SIZE_DIV_2 - 1;
+    constexpr int CENTRE = DisplayConfig::Width / 2 - 1;
+    constexpr int OUTER = DisplayConfig::Width / 2 - 1;
 
     backbuffer.drawCircle(CENTRE, CENTRE, OUTER, lgfx::color888(0, 200, 0));
     backbuffer.drawCircle(CENTRE, CENTRE, (OUTER / 3) * 2, lgfx::color888(0, 64, 0));
@@ -132,15 +123,15 @@ std::pair<int, int> AircraftManager::ProjectCoordinateToScreen(float predLat, fl
     const float normLon = (dLon + rad) / (2.0f * rad);
     const float normLat = (dLat + rad) / (2.0f * rad);
 
-    const int x = static_cast<int>(normLon * SCREEN_SIZE);
-    const int y = static_cast<int>(SCREEN_SIZE - (normLat * SCREEN_SIZE));
+    const int x = static_cast<int>(normLon * DisplayConfig::Width);
+    const int y = static_cast<int>(DisplayConfig::Height - (normLat * DisplayConfig::Height));
 
     return { x, y };
 }
 
 void AircraftManager::DrawAircraftInfo(LGFX_Sprite& backbuffer, int x, int y, const TrackedAircraft& tracked) const
 {
-    const int lineHeight = tft.fontHeight() + 1;
+    const int lineHeight = canvas.fontHeight() + 1;
 
     backbuffer.setTextSize(1);
     backbuffer.setTextColor(lgfx::color888(0, 128, 0));

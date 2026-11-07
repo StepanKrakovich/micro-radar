@@ -13,7 +13,7 @@
 
 ## Prerequisites
 
-At the core of this project is the ESP32-C3 module with an integrated 240x240 IPS screen. No soldering required. The module does all the heavy lifting.
+The firmware targets the Waveshare ESP32-S3-LCD-2.8C, with its integrated 480x480 ST7701 RGB display and PSRAM. No soldering required.
 
 I used dark grey PLA filament for the print, but any colour will work just fine. For the lens (optional but recommended), you'll need clear-drying epoxy to secure it (not super glue, which will fog up the lens. Ask me how I know.)
 
@@ -28,7 +28,9 @@ Set up a clean, organised workspace before you start. You'll be handling small c
 
 Everything you need is below. I've linked products I used and recommend for ease of build, though alternatives exist on Amazon and elsewhere. If you deviate from this hardware, you may need to modify the enclosure and/or code.
 
-- [ ] [1.28" Round GC9A01 240x240 IPS Display Module with ESP32-C3 (no-touch)](https://www.aliexpress.com/item/1005008482665220.html)
+The enclosure and accessory links below are from the original ESP32-C3 build. The ESP32-S3-LCD-2.8C has a different board shape and may require a different enclosure.
+
+- [ ] [Waveshare ESP32-S3-LCD-2.8C (480x480 ST7701 display)](https://www.waveshare.com/ESP32-S3-LCD-2.8C.htm)
 - [ ] [USB-C Ribbon Extension Cable (5cm, CMUP-CFPCB-BK)](https://www.aliexpress.com/item/1005005371248824.html)
 - [ ] [M2 Heat-set Threaded Inserts (+ soldering iron)](https://www.aliexpress.com/item/1005008493831823.html)
 - [ ] [32.5mm Round Mineral Glass Lens (optional, recommended)](https://www.aliexpress.com/item/1005004783554496.html)
@@ -176,7 +178,7 @@ Here you can set:
 - **Location** (latitude and longitude): the centre point of your radar
 - **Radar radius**: how wide the scan extends (in degrees, 2 degrees is the limit to avoid rate limiting)
 - **Display options**: toggle visual elements
-- **OpenSky credentials**: your client ID and secret (if you've made an account - again, highly recommend!)
+- **c credentials**: your client ID and secret (if you've made an account - again, highly recommend!)
 
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/45e6219c-2672-4197-baad-16ae08180b58" />
 

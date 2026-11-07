@@ -3,6 +3,7 @@
 
 String OpenSkyAuthTokenHandler::FetchBearerToken(const String& url, const String& clientId, const String& clientSecret)
 {
+    Serial.println("[opensky] Requesting bearer token");
     String body = "grant_type=client_credentials";
     body += "&client_id=" + clientId;
     body += "&client_secret=" + clientSecret;
