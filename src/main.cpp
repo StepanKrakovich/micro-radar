@@ -8,6 +8,7 @@
 #include "HttpRequestManager.h"
 #include "OpenSkyAuthTokenHandler.h"
 #include "AircraftManager.h"
+#include "ConfigurationWebServer.h"
 #include "DrawHelpers.h"
 #include "RadarSettings.h"
 #include "models/Aircraft.h"
@@ -26,10 +27,12 @@ RGBDisplay display;
 LGFX_Sprite backbuffer;
 
 WiFiManager wm;
+ConfigurationWebServer configServer;
 HttpRequestManager http;
 OpenSkyAuthTokenHandler authHandler(http);
 
-AircraftManager aircraftManager(authHandler, http, backbuffer);
+AircraftManager aircraftManager(configServer, authHandler, http, backbuffer);
+bool renderScanlines = RadarSettings::RenderScanlines;
 
 void setup()
 {
@@ -75,6 +78,13 @@ void setup()
       Serial.println("[wifi] WARNING: Failed to disable power save");
     }
   }
+
+  configServer.Initialise();
+  const String configuredScanlines = configServer.GetStoredString("scanline");
+  if (!configuredScanlines.isEmpty()) {
+    renderScanlines = configuredScanlines == "true";
+  }
+
   // initialise aircraft manager
   Serial.println("[boot] Initializing aircraft manager");
   aircraftManager.Initialise();
@@ -89,7 +99,7 @@ void loop()
   // draw cycle
   backbuffer.fillScreen(lgfx::color888(0, 0, 0));
 
-  if (RadarSettings::RenderScanlines) {
+  if (renderScanlines) {
     DrawScanLines(backbuffer,
       SCREEN_SIZE_DIV_2 - 1,
       SCREEN_SIZE_DIV_2 - 1,

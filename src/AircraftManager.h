@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "ConfigurationWebServer.h"
 #include "RadarSettings.h"
 #include "models/TrackedAircraft.h"
 #include "OpenSkyAuthTokenHandler.h"
@@ -24,6 +25,9 @@ private:
     OpenSkyAuthTokenHandler& authHandler;
     HttpRequestManager& http;
     LGFX_Sprite& canvas;
+    ConfigurationWebServer& configServer;
+    String openSkyClientId = OPENSKY_CLIENT_ID;
+    String openSkyClientSecret = OPENSKY_CLIENT_SECRET;
 
     void DrawRadarCircles(LGFX_Sprite& backbuffer) const;
     std::pair<int, int> ProjectCoordinateToScreen(float predLat, float predLon) const;
@@ -31,8 +35,8 @@ private:
     void DrawAircraftTriangle(LGFX_Sprite& backbuffer, int x, int y, const TrackedAircraft& tracked) const;
 
 public:
-    AircraftManager(OpenSkyAuthTokenHandler& auth, HttpRequestManager& httpManager, LGFX_Sprite& drawingCanvas)
-        : authHandler(auth), http(httpManager), canvas(drawingCanvas)
+    AircraftManager(ConfigurationWebServer& config, OpenSkyAuthTokenHandler& auth, HttpRequestManager& httpManager, LGFX_Sprite& drawingCanvas)
+        : authHandler(auth), http(httpManager), canvas(drawingCanvas), configServer(config)
     {
     }
     ~AircraftManager() = default;

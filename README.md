@@ -8,8 +8,17 @@
   <img src="https://github.com/user-attachments/assets/2ccb2063-d15c-4180-8e3c-ae3a81c814ff" alt="drawing" width="400"/>
 </p>
 <p align=center>
-  <a href="#prerequisites">PREREQUISITES</a> - <a href="#assembly">ASSEMBLY</a> - <a href="#usage">USAGE</a> - <a href="#faq">FAQ</a>
+  <a href="#port-and-configuration-summary">PORT & CONFIGURATION</a> - <a href="#prerequisites">PREREQUISITES</a> - <a href="#assembly">ASSEMBLY</a> - <a href="#usage">USAGE</a> - <a href="#faq">FAQ</a>
 </p>
+
+## Port and Configuration Summary
+
+This firmware has been ported from the original ESP32-C3 setup to the **Waveshare ESP32-S3-LCD-2.8C**.
+
+- **Display compatibility:** The current display driver is configured for the board's 480x480 ST7701 RGB panel, pinout, timing, and TCA9554 I/O expander. It uses ESP-IDF RGB-panel scanout; LovyanGFX is used to draw into an RGB565 frame buffer. Other ESP32-S3 boards are compatible only if their display hardware and wiring match, or the driver is adapted. The original ESP32-C3/SPI display setup is not supported by this configuration.
+- **Wi-Fi and settings:** WiFiManager provides first-boot Wi-Fi setup. After joining the same network, open [http://microradar.local](http://microradar.local) to configure the radar location, radius, sweep, and aircraft display. Settings are saved in ESP32 Preferences and applied after restart. If saved settings cannot be read, the configuration page uses the defaults in `include/RadarSettings.h`.
+- **OpenSky credentials:** For build-time credentials, create a root-level `credentials.json` containing `clientId` and `clientSecret`; `scripts/load_credentials.py` loads them before compilation. The configuration page can also save device-local credential overrides. The JSON file is ignored by Git, but build-time credentials are embedded in firmware, so protect the firmware binary. The configuration page uses unauthenticated HTTP; use it only on a trusted network.
+- **Animation:** The main loop targets 30 FPS and the sweep makes one rotation every 12 seconds. Actual frame rate can be lower if rendering or other work takes longer.
 
 ## Prerequisites
 
@@ -178,7 +187,7 @@ Here you can set:
 - **Location** (latitude and longitude): the centre point of your radar
 - **Radar radius**: how wide the scan extends (in degrees, 2 degrees is the limit to avoid rate limiting)
 - **Display options**: toggle visual elements
-- **c credentials**: your client ID and secret (if you've made an account - again, highly recommend!)
+- **OpenSky credentials**: your client ID and secret (optional, but recommended)
 
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/45e6219c-2672-4197-baad-16ae08180b58" />
 

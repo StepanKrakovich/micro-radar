@@ -1,9 +1,39 @@
 #include "AircraftManager.h"
 
 #include <ArduinoJson.h>
+#include <cmath>
+#include <cstdlib>
+
+namespace
+{
+bool ParseConfiguredNumber(const String& text, double& value)
+{
+    char* end = nullptr;
+    value = strtod(text.c_str(), &end);
+    return end != text.c_str() && *end == '\0' && std::isfinite(value);
+}
+}
 
 void AircraftManager::Initialise()
 {
+    const String configuredLatitude = configServer.GetStoredString("latitude");
+    const String configuredLongitude = configServer.GetStoredString("longitude");
+    const String configuredRadius = configServer.GetStoredString("radius");
+    double value;
+    if (ParseConfiguredNumber(configuredLatitude, value) && value >= -90.0 && value <= 90.0) lat = value;
+    if (ParseConfiguredNumber(configuredLongitude, value) && value >= -180.0 && value <= 180.0) lon = value;
+    if (ParseConfiguredNumber(configuredRadius, value) && value > 0.0 && value <= 2.5) rad = value;
+
+    const String configuredInfoText = configServer.GetStoredString("infotext");
+    const String configuredTriangles = configServer.GetStoredString("triangle");
+    if (!configuredInfoText.isEmpty()) displayInfoText = configuredInfoText == "true";
+    if (!configuredTriangles.isEmpty()) displayTriangles = configuredTriangles == "true";
+
+    const String configuredClientId = configServer.GetStoredString("opensky-id");
+    const String configuredClientSecret = configServer.GetStoredString("opensky-secret");
+    if (!configuredClientId.isEmpty()) openSkyClientId = configuredClientId;
+    if (!configuredClientSecret.isEmpty()) openSkyClientSecret = configuredClientSecret;
+
     Serial.printf(
         "[aircraft] Radar center: %.4f, %.4f; radius: %.1f degrees\n",
         lat, lon, rad
@@ -17,7 +47,7 @@ void AircraftManager::Initialise()
     int dailyRequestBudget = ANONYMOUS_TOKENS_PER_DAY - TOKEN_BUFFER; // non-authed tokens minus buffer
 
     Serial.println("[aircraft] Checking OpenSky credentials/token");
-    const String token = authHandler.GetValidToken(OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET);
+    const String token = authHandler.GetValidToken(openSkyClientId, openSkyClientSecret);
     Serial.println("[aircraft] OpenSky credentials/token check finished");
     if (!token.isEmpty())
         dailyRequestBudget = AUTHED_TOKENS_PER_DAY - TOKEN_BUFFER; // authed tokens minus buffer
@@ -35,7 +65,7 @@ void AircraftManager::Update()
         lastFetch = now;
 
         // auth
-        const String token = authHandler.GetValidToken(OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET);
+        const String token = authHandler.GetValidToken(openSkyClientId, openSkyClientSecret);
 
         std::vector<std::pair<String, String>> headers = {};
         if (!token.isEmpty()) headers.push_back({ "Authorization", "Bearer " + token });
